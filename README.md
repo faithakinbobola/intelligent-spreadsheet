@@ -1,36 +1,246 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Intelligent Spreadsheet (MVP)
 
-## Getting Started
+A role-based web application for managing post/task completion using a single-action workflow.
 
-First, run the development server:
+Content Associates complete tasks by clicking 👍 and submitting a required delivery note.
+Admins can view all activity and filter completion data.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+## MVP Overview
+
+### Roles
+- Admin
+- Content Associate
+---
+### Core Idea
+> Each task has exactly one action per associate:
+>👍 Click + Required Delivery Note
+---
+Admins can:
+- Create tasks
+- Assign to all or specific associates
+- View completion list per task
+- Filter by user/date/status
+---
+Associates can:
+- View assigned tasks
+- Complete a task once
+- Edit their delivery note
+- See only their own activity
+---
+## Tech Stack (MVP)
+- **Frontend:** Next.js (App Router)
+- **Backend:** Next.js API Routes
+- **Database:** Supabase (Postgres)
+- **Auth:** Supabase Auth
+- **Styling:** TailwindCSS
+- **Hosting:** Vercel
+---
+## Project Structure
+```javascript
+/app
+  /login
+  /signup
+  /dashboard
+  /admin
+  /api
+    /auth
+      signup/route.ts
+      login/route.ts
+    /posts
+      route.ts
+      [id]/route.ts
+    /actions
+      route.ts
+
+
+/lib
+  supabaseServer.ts
+  auth.ts
+  permissions.ts
+
+
+/types
+  index.ts
 ```
+---
+### Environment Variables
+```env
+DATABASE_URL=
+JWT_SECRET=
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+ADMIN_SECRET_KEY=your_super_secret_key
+```
+---
+## Database Schema
+### Users (Supabase Auth + profile table)
+**profiles**
+Column|Type
+-------|---------
+id| uuid (FK → auth.users)
+name|	text
+role|	text (ADMIN or ASSOCIATE)
+created_at|	timestamp
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**posts**
+Column|Type
+-------|---------
+id|	uuid
+title|	text
+content|	text
+created_by|	uuid
+created_at|	timestamp
+due_date|	timestamp (nullable)
+assignment_scope|	text (ALL or SPECIFIC)
+post_assignments (if SPECIFIC)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+Column|Type
+-------|---------
+id|	uuid
+post_id|	uuid
+user_id|	uuid
+post_actions
+Column	Type
+id|	uuid
+post_id|	uuid
+user_id|	uuid
+delivery_note|	text
+liked	boolean| (always true)
+created_at|	timestamp
+updated_at|	timestamp
 
-To learn more about Next.js, take a look at the following resources:
+### Unique constraint:
+```javascript
+UNIQUE(post_id, user_id)
+```
+Ensures one action per associate per post.
+---
+## Authentication Logic
+### Admin Signup
+- Requires ADMIN_SECRET_KEY
+- If correct → role = ADMIN
+- If not → reject
+- Associate Signup
+- Default role = ASSOCIATE
+- Server-Side Protection
+- Every API route:
+- Validate Supabase session
+- Fetch user profile
+- Check role
+- Reject unauthorized requests
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## API Endpoints (MVP)
+### Signup
+POST /api/auth/signup
+```json
+{
+  "email": "user@email.com",
+  "password": "password",
+  "name": "Faith",
+  "adminKey": "optional"
+}
+```
+Behavior:
+- Else → ASSOCIATE
+- If ```adminKey === ADMIN_SECRET_KEY``` → ADMIN
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Login
+```POST /api/auth/login```
+Returns Supabase session.
 
-## Deploy on Vercel
+### Create Post (Admin Only)
+```POST /api/posts```
+```javascript
+{
+  "title": "Instagram Post",
+  "content": "Create IG carousel",
+  "dueDate": "2026-02-15",
+  "assignmentScope": "ALL",
+  "assignedUserIds": []
+}
+```
+Server:
+- Verify role = ADMIN
+- Insert post
+- If SPECIFIC → insert into post_assignments
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Get Posts
+```GET /api/posts```
+Behavior:
+If ADMIN:
+- Return all posts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+If ASSOCIATE:
+Return:
+- Posts with assignment_scope = ALL
+- Posts assigned specifically to user
+
+Also attach:
+- Completion status for that user
+
+### Complete Task
+```POST /api/actions```
+```json
+{
+  "postId": "uuid",
+  "deliveryNote": "Live on Instagram"
+}
+```
+Server:
+- Verify role = ASSOCIATE
+- Verify user assigned
+- Upsert into post_actions
+- liked = true
+- updated_at auto-updates
+
+### Admin View Per Post
+```GET /api/posts/:id```
+Admin only.
+Returns:
+```json
+{
+  post,
+  completions: [
+    {
+      name,
+      delivery_note,
+      created_at,
+      updated_at
+    }
+  ]
+}
+```
+## Dashboards
+### Associate Dashboard
+Displays:
+Title	Due-Date	Status	Action
+-------|---------|-------|---------
+
+Status:
+- Completed
+- Not Completed
+
+After completion:
+- Show delivery note
+- Allow edit
+
+Must NOT display:
+- Other associate names
+- Other notes
+- Other timestamps
+
+### Admin Dashboard
+Displays:
+- All posts
+- Completion count
+- Completion list per post
+
+Filters:
+- By associate name
+- By date range
+- By completion status
