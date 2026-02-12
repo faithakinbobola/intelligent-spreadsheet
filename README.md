@@ -1,4 +1,4 @@
-# Intelligent Spreadsheet (MVP)
+# Intelligent Spreadsheet
 
 A role-based web application for managing post/task completion using a single-action workflow.
 
@@ -119,7 +119,7 @@ updated_at|	timestamp
 UNIQUE(post_id, user_id)
 ```
 Ensures one action per associate per post.
----
+
 ## Authentication Logic
 ### Admin Signup
 - Requires ADMIN_SECRET_KEY
@@ -134,7 +134,7 @@ Ensures one action per associate per post.
 - Check role
 - Reject unauthorized requests
 
-## API Endpoints (MVP)
+## API Endpoints
 ### Signup
 POST /api/auth/signup
 ```json
@@ -153,6 +153,7 @@ Behavior:
 ```POST /api/auth/login```
 Returns Supabase session.
 
+
 ### Create Post (Admin Only)
 ```POST /api/posts```
 ```javascript
@@ -169,19 +170,23 @@ Server:
 - Insert post
 - If SPECIFIC → insert into post_assignments
 
+
 ### Get Posts
 ```GET /api/posts```
 Behavior:
 If ADMIN:
 - Return all posts
 
+
 If ASSOCIATE:
 Return:
 - Posts with assignment_scope = ALL
 - Posts assigned specifically to user
 
+
 Also attach:
 - Completion status for that user
+
 
 ### Complete Task
 ```POST /api/actions```
@@ -191,12 +196,15 @@ Also attach:
   "deliveryNote": "Live on Instagram"
 }
 ```
+
+
 Server:
 - Verify role = ASSOCIATE
 - Verify user assigned
 - Upsert into post_actions
 - liked = true
 - updated_at auto-updates
+
 
 ### Admin View Per Post
 ```GET /api/posts/:id```
@@ -215,6 +223,7 @@ Returns:
   ]
 }
 ```
+
 ## Dashboards
 ### Associate Dashboard
 Displays:
@@ -233,6 +242,7 @@ Must NOT display:
 - Other associate names
 - Other notes
 - Other timestamps
+
 
 ### Admin Dashboard
 Displays:
