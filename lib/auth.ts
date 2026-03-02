@@ -1,19 +1,68 @@
+import { cache } from "react"
 import { createClient } from "./supabase/server"
+import { redirect } from "next/navigation"
 
-export async function getUserWithRole() {
+export const  getUserWithRole = cache(async () => {
+  console.log("getUserWithRole called")
   const supabase = await createClient()
 
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return null
+  console.log("USER: ", JSON.stringify(user?.id));
+  
 
-  const { data: profile } = await supabase
+  if (!user) {
+    redirect("/login")
+  }
+
+  const { data: profile, error } = await supabase
     .from("profiles")
     .select("id, name, role")
     .eq("id", user.id)
     .single()
 
-  return profile
+  console.log("PROFILE:", JSON.stringify(profile, null, 2))
+  console.log("PROFILE ERROR:", JSON.stringify(error, null, 2))
+  
+
+  if (!profile) {
+    redirect("/login")
+  }
+
+  return { user, profile, email: user.email }
+})
+
+// export async function requireAdmin() {
+//   const supabase = await createClient()
+
+//   const {fi
+//     data: { user },
+//   } = await supabase.auth.getUser()
+
+//   if (!user) {
+//     redirect("/login")
+//   }
+
+//   const { data: profile } = await supabase
+//     .from("profiles")
+//     .select("id, role, name, email")
+//     .eq("id", user.id)
+//     .single()
+
+//   if (!profile || profile.role !== "ADMIN") {
+//     redirect("/dashboard")
+//   }
+
+//   return { user, profile }
+// }
+
+export async function requireAdmin() {
+  const supabase = await createClient()
+  const { user, profile } = await getUserWithRole()
+
+  if (profile.role !== "ADMIN") redirect("/dashboard")
+
+  return { supabase, user, profile } // include supabase for queries
 }
