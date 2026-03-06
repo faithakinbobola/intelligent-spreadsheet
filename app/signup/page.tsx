@@ -8,7 +8,6 @@ export default function SignUpPage() {
     name: "",
     email: "",
     password: "",
-    // adminKey: "",
   })
   const [message, setMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -22,6 +21,8 @@ export default function SignUpPage() {
     setLoading(true)
     setMessage(null)
 
+    console.log("FORM STATE: ", formState);
+    
     const formData = new FormData()
     
     Object.entries(formState).forEach(([key, value]) =>
@@ -35,6 +36,8 @@ export default function SignUpPage() {
     } else {
       setMessage(res.message || "Success! Check your email to confirm.")
     }
+
+    
   }
 
   return (
@@ -68,14 +71,6 @@ export default function SignUpPage() {
           required
           className="w-full p-2 border rounded"
         />
-        {/* <input
-          name="adminKey"
-          type="text"
-          placeholder="Admin Key (Optional)"
-          value={formState.adminKey}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        /> */}
         <button
           type="submit"
           disabled={loading}
@@ -84,6 +79,7 @@ export default function SignUpPage() {
           {loading ? "Signing up..." : "Sign Up"}
         </button>
       </form>
+      <p className="text-sm mt-2">Already have an account? <a href="/login" className="text-blue-600 underline">Login</a></p>
     </div>
   )
 }

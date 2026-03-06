@@ -3,7 +3,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { createClient as createAdminClient } from "@supabase/supabase-js"
-// import { log } from "console"
 
 export async function signIn(formData: FormData) {
   const supabase = await createClient()
@@ -21,15 +20,12 @@ export async function signIn(formData: FormData) {
 
   const userId = data.user.id
 
-  // 2. If admin key provided, validate and upgrade role
   if (adminKey && adminKey.trim() !== "") {
     if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-      // Sign them out and reject
       await supabase.auth.signOut()
       return { error: "Invalid admin key." }
     }
-
-    // Use service role client to bypass RLS for the update
+    
     const adminClient = createAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -65,7 +61,8 @@ export async function signUp(formData: FormData) {
   })
   if (error) return { error: error.message }
 
-  return { success: true, message: "Account created! Please log in." }
+  return { success: true, message: "Check your email to confirm your account" }
+
 }
 
 export async function signOut() {

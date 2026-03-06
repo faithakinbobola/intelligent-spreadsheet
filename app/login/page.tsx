@@ -39,7 +39,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-16">
+    <div className="max-w-md m-auto mt-16">
       <h1 className="text-2xl font-bold mb-6">Login</h1>
       {message && (
         <p className="mb-4 text-center text-red-600">{message}</p>
@@ -79,6 +79,7 @@ export default function LoginPage() {
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>
+      <p className="text-sm mt-2">Don&apos;t have an account? <a href="/signup" className="text-blue-600 underline">Signup</a></p>
     </div>
   )
 }

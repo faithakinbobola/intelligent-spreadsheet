@@ -3,29 +3,21 @@ import { createClient } from "./supabase/server"
 import { redirect } from "next/navigation"
 
 export const  getUserWithRole = cache(async () => {
-  console.log("getUserWithRole called")
   const supabase = await createClient()
 
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  console.log("USER: ", JSON.stringify(user?.id));
-  
-
   if (!user) {
     redirect("/login")
   }
 
-  const { data: profile, error } = await supabase
+  const { data: profile } = await supabase
     .from("profiles")
     .select("id, name, role")
     .eq("id", user.id)
     .single()
-
-  console.log("PROFILE:", JSON.stringify(profile, null, 2))
-  console.log("PROFILE ERROR:", JSON.stringify(error, null, 2))
-  
 
   if (!profile) {
     redirect("/login")
