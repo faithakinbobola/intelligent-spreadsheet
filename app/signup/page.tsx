@@ -20,8 +20,6 @@ export default function SignUpPage() {
     e.preventDefault()
     setLoading(true)
     setMessage(null)
-
-    console.log("FORM STATE: ", formState);
     
     const formData = new FormData()
     

@@ -10,7 +10,8 @@ interface Associate {
 
 export default function CreatePostForm() {
   const [open, setOpen] = useState(false)
-  const [scope, setScope] = useState<"ALL" | "SPECIFIC">("ALL")
+  // const [scope, setScope] = useState<"ALL" | "SPECIFIC">("ALL")
+  const [scope, setScope] = useState<"ALL">("ALL")
   const [associates, setAssociates] = useState<Associate[]>([])
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -31,10 +32,10 @@ export default function CreatePostForm() {
   }
 
   async function handleSubmit(formData: FormData) {
-    if (scope === "SPECIFIC" && selectedUsers.length === 0) {
-      setError("Select at least one associate")
-      return
-    }
+    // if (scope === "SPECIFIC" && selectedUsers.length === 0) {
+    //   setError("Select at least one associate")
+    //   return
+    // }
 
     setLoading(true)
     setError(null)
@@ -59,7 +60,7 @@ export default function CreatePostForm() {
       <div className="flex justify-end">
         <button
           onClick={() => setOpen(true)}
-          className="bg-black text-white px-4 py-2 rounded text-sm"
+          className="bg-black text-white dark:border dark:border-white px-4 py-2 rounded text-sm"
         >
           + New Post
         </button>
@@ -67,7 +68,7 @@ export default function CreatePostForm() {
 
       {open && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-black dark:border dark:border-white rounded-lg shadow-xl p-6 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-semibold">Create Post</h2>
 
             <form className="space-y-4">
@@ -113,7 +114,7 @@ export default function CreatePostForm() {
                   >
                     All Associates
                   </button>
-                  <button
+                  {/* <button
                     type="button"
                     onClick={() => setScope("SPECIFIC")}
                     className={`flex-1 p-2 text-sm border rounded ${
@@ -121,11 +122,11 @@ export default function CreatePostForm() {
                     }`}
                   >
                     Specific Associates
-                  </button>
+                  </button> */}
                 </div>
               </div>
 
-              {scope === "SPECIFIC" && (
+              {/* {scope === "SPECIFIC" && (
                 <div className="border rounded p-3 space-y-2 max-h-40 overflow-y-auto">
                   {associates.length === 0 ? (
                     <p className="text-sm text-gray-400">No associates found</p>
@@ -145,7 +146,7 @@ export default function CreatePostForm() {
                     ))
                   )}
                 </div>
-              )}
+              )} */}
 
               {error && <p className="text-red-500 text-sm">{error}</p>}
 
@@ -160,7 +161,7 @@ export default function CreatePostForm() {
                 <button
                   formAction={handleSubmit}
                   disabled={loading}
-                  className="px-4 py-2 text-sm bg-black text-white rounded disabled:opacity-50"
+                  className="px-4 py-2 text-sm bg-black dark:bg-white dark:text-black text-white rounded disabled:opacity-50"
                 >
                   {loading ? "Creating..." : "Create Post"}
                 </button>

@@ -16,16 +16,15 @@ export default async function DashboardLayout({
         <h2 className="text-xl font-bold">Dashboard</h2>
 
         <Link href="/dashboard">Home</Link>
-
         {profile?.role === "ADMIN" && (
-          <>
+          <div className="flex flex-col space-y-1">
             <Link href="/dashboard/admin">
               Admin Panel
             </Link>
             <Link href="/dashboard/admin/create-post">
               Create Post
             </Link>
-          </>
+          </div>
         )}
       </aside>
 

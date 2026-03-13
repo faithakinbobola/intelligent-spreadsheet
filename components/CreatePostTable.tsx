@@ -54,12 +54,12 @@ export default function PostsTable({ posts, role, userId }: Props) {
     <>
       <div className="overflow-x-auto rounded border">
         <table className="w-full text-sm">
-          <thead className="bg-gray-100 text-left">
+          <thead className="bg-gray-100 dark:bg-black text-left">
             <tr>
               <th className="px-4 py-3 font-semibold">Title</th>
               <th className="px-4 py-3 font-semibold">Content</th>
               <th className="px-4 py-3 font-semibold">Due Date</th>
-              <th className="px-4 py-3 font-semibold">Scope</th>
+              {/* <th className="px-4 py-3 font-semibold">Scope</th> */}
               <th className="px-4 py-3 font-semibold">👍 Likes</th>
               {role === "ADMIN" && (
                 <th className="px-4 py-3 font-semibold">Activity</th>
@@ -72,19 +72,19 @@ export default function PostsTable({ posts, role, userId }: Props) {
               const action = myAction(post)
 
               return (
-                <tr key={post.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={post.id} className="hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
                   <td className="px-4 py-3 font-medium max-w-37.5 truncate">
                     {post.title}
                   </td>
-                  <td className="px-4 py-3 text-gray-500 max-w-50 truncate">
+                  <td className="px-4 py-3 text-gray-500 dark:text-white max-w-50 truncate">
                     {post.content}
                   </td>
-                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                  <td className="px-4 py-3 text-gray-500 dark:text-white whitespace-nowrap">
                     {post.due_date
                       ? new Date(post.due_date).toLocaleDateString()
                       : "—"}
                   </td>
-                  <td className="px-4 py-3">
+                  {/* <td className="px-4 py-3">
                     <span
                       className={`text-xs px-2 py-1 rounded-full font-medium ${
                         post.assignment_scope === "ALL"
@@ -94,7 +94,7 @@ export default function PostsTable({ posts, role, userId }: Props) {
                     >
                       {post.assignment_scope}
                     </span>
-                  </td>
+                  </td> */}
                   <td className="px-4 py-3 font-semibold">
                     {post.post_actions.length}
                   </td>
