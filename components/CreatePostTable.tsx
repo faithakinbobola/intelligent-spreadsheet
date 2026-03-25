@@ -4,6 +4,7 @@ import { useState } from "react"
 import LikeModal from "./LikeModal"
 import ActivityModal from "./ActivityModal"
 import { deletePost } from "@/app/actions/posts"
+import CreatePostForm from "./CreatePostForm"
 
 interface Action {
   id: string
@@ -40,6 +41,7 @@ interface Props {
 export default function PostsTable({ posts, role, userId }: Props) {
   const [likeModal, setLikeModal] = useState<Post | null>(null)
   const [activityModal, setActivityModal] = useState<Post | null>(null)
+  const [editModal, setEditModal] = useState<Post | null>(null)
 
   function myAction(post: Post) {
     return post.post_actions.find((a) => a.user_id === userId)
@@ -63,6 +65,9 @@ export default function PostsTable({ posts, role, userId }: Props) {
               <th className="px-4 py-3 font-semibold">👍 Likes</th>
               {role === "ADMIN" && (
                 <th className="px-4 py-3 font-semibold">Activity</th>
+              )}
+              {role === "ADMIN" && (
+                <th className="px-4 py-3 font-semibold">Edit</th>
               )}
               <th className="px-4 py-3 font-semibold">Action</th>
             </tr>
@@ -109,6 +114,18 @@ export default function PostsTable({ posts, role, userId }: Props) {
                       </button>
                     </td>
                   )}
+
+                  {role === "ADMIN" && (
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => setEditModal(post)}
+                        className="text-blue-600 underline text-xs hover:text-blue-800"
+                      >
+                        Edit task
+                      </button>
+                    </td>
+                  )}
+
 
                   <td className="px-4 py-3">
                     {role === "ASSOCIATE" ? (
@@ -158,6 +175,13 @@ export default function PostsTable({ posts, role, userId }: Props) {
           postContent={activityModal.content}
           actions={activityModal.post_actions as any}
           onClose={() => setActivityModal(null)}
+        />
+      )}
+
+      {editModal && (
+        <CreatePostForm
+          editPost={editModal}
+          onClose={() => setEditModal(null)}
         />
       )}
     </>

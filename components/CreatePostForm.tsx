@@ -1,21 +1,35 @@
 "use client"
 
-import { createPost, getAssociates } from "@/app/actions/posts"
-import { useState, useEffect } from "react"
+import { createPost, updatePost, getAssociates } from "@/app/actions/posts"
+import { useState, useEffect, useRef } from "react"
 
 interface Associate {
   id: string
   name: string
 }
 
-export default function CreatePostForm() {
-  const [open, setOpen] = useState(false)
-  // const [scope, setScope] = useState<"ALL" | "SPECIFIC">("ALL")
+interface Post {
+  id: string
+  title: string
+  content: string
+  due_date: string | null
+}
+
+interface Props {
+  editPost?: Post        // if passed, form is in edit mode
+  onClose?: () => void  // called after save (for modal usage)
+}
+
+export default function CreatePostForm({ editPost, onClose }: Props) {
+  const isEditing = !!editPost
+
+  const [open, setOpen] = useState(isEditing) // auto-open when editing
   const [scope, setScope] = useState<"ALL">("ALL")
   const [associates, setAssociates] = useState<Associate[]>([])
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const loadingRef = useRef(false)
 
   useEffect(() => {
     if (open) {
@@ -31,45 +45,61 @@ export default function CreatePostForm() {
     )
   }
 
-  async function handleSubmit(formData: FormData) {
-    // if (scope === "SPECIFIC" && selectedUsers.length === 0) {
-    //   setError("Select at least one associate")
-    //   return
-    // }
+  function handleClose() {
+    setOpen(false)
+    onClose?.()
+  }
 
+  async function handleSubmit(formData: FormData) {
+    if(loadingRef.current) return // prevent multiple submissions
+    loadingRef.current = true
     setLoading(true)
     setError(null)
 
-    selectedUsers.forEach((id) => formData.append("assigned_users", id))
-    formData.set("assignment_scope", scope)
+    let result
 
-    const result = await createPost(formData)
+    if (isEditing) {
+      result = await updatePost(editPost.id, formData)
+    } else {
+      selectedUsers.forEach((id) => formData.append("assigned_users", id))
+      formData.set("assignment_scope", scope)
+      result = await createPost(formData)
+    }
 
     if (result?.error) {
       setError(result.error)
     } else {
-      setOpen(false)
-      setScope("ALL")
-      setSelectedUsers([])
+      handleClose()
+      if (!isEditing) {
+        setScope("ALL")
+        setSelectedUsers([])
+      }
     }
+
     setLoading(false)
+    loadingRef.current = false
   }
 
   return (
     <>
-      <div className="flex justify-end">
-        <button
-          onClick={() => setOpen(true)}
-          className="bg-black text-white dark:border dark:border-white px-4 py-2 rounded text-sm"
-        >
-          + New Post
-        </button>
-      </div>
+      {/* Only show the "+ New Post" button in create mode */}
+      {!isEditing && (
+        <div className="flex justify-end">
+          <button
+            onClick={() => setOpen(true)}
+            className="bg-black text-white dark:border dark:border-white px-4 py-2 rounded text-sm"
+          >
+            + New Post
+          </button>
+        </div>
+      )}
 
       {open && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-black dark:border dark:border-white rounded-lg shadow-xl p-6 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold">Create Post</h2>
+            <h2 className="text-lg font-semibold">
+              {isEditing ? "Edit Post" : "Create Post"}
+            </h2>
 
             <form className="space-y-4">
               <div className="space-y-1">
@@ -77,6 +107,7 @@ export default function CreatePostForm() {
                 <input
                   name="title"
                   placeholder="Post title"
+                  defaultValue={editPost?.title ?? ""}
                   required
                   className="border p-2 w-full rounded text-sm"
                 />
@@ -87,6 +118,7 @@ export default function CreatePostForm() {
                 <textarea
                   name="content"
                   placeholder="Post content or description..."
+                  defaultValue={editPost?.content ?? ""}
                   rows={3}
                   required
                   className="border p-2 w-full rounded text-sm resize-none"
@@ -98,72 +130,52 @@ export default function CreatePostForm() {
                 <input
                   name="due_date"
                   type="datetime-local"
+                  defaultValue={
+                    editPost?.due_date
+                      ? new Date(editPost.due_date).toISOString().slice(0, 16)
+                      : ""
+                  }
                   className="border p-2 w-full rounded text-sm"
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-sm font-medium">Assign To</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setScope("ALL")}
-                    className={`flex-1 p-2 text-sm border rounded ${
-                      scope === "ALL" ? "bg-black text-white" : "bg-white"
-                    }`}
-                  >
-                    All Associates
-                  </button>
-                  {/* <button
-                    type="button"
-                    onClick={() => setScope("SPECIFIC")}
-                    className={`flex-1 p-2 text-sm border rounded ${
-                      scope === "SPECIFIC" ? "bg-black text-white" : "bg-white"
-                    }`}
-                  >
-                    Specific Associates
-                  </button> */}
+              {/* Scope selector only shown when creating */}
+              {!isEditing && (
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Assign To</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setScope("ALL")}
+                      className={`flex-1 p-2 text-sm border rounded ${
+                        scope === "ALL" ? "bg-black text-white" : "bg-white"
+                      }`}
+                    >
+                      All Associates
+                    </button>
+                  </div>
                 </div>
-              </div>
-
-              {/* {scope === "SPECIFIC" && (
-                <div className="border rounded p-3 space-y-2 max-h-40 overflow-y-auto">
-                  {associates.length === 0 ? (
-                    <p className="text-sm text-gray-400">No associates found</p>
-                  ) : (
-                    associates.map((a) => (
-                      <label
-                        key={a.id}
-                        className="flex items-center gap-2 text-sm cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.includes(a.id)}
-                          onChange={() => toggleUser(a.id)}
-                        />
-                        {a.name}
-                      </label>
-                    ))
-                  )}
-                </div>
-              )} */}
+              )}
 
               {error && <p className="text-red-500 text-sm">{error}</p>}
 
               <div className="flex gap-2 justify-end">
                 <button
                   type="button"
-                  onClick={() => setOpen(false)}
+                  onClick={handleClose}
                   className="px-4 py-2 text-sm border rounded"
                 >
                   Cancel
                 </button>
                 <button
+                  type="submit"
                   formAction={handleSubmit}
                   disabled={loading}
                   className="px-4 py-2 text-sm bg-black dark:bg-white dark:text-black text-white rounded disabled:opacity-50"
                 >
-                  {loading ? "Creating..." : "Create Post"}
+                  {loading
+                    ? isEditing ? "Saving..." : "Creating..."
+                    : isEditing ? "Save" : "Create Post"}
                 </button>
               </div>
             </form>

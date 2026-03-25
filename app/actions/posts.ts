@@ -215,3 +215,24 @@ export async function getAssociates() {
   if (error) return { error: error.message }
   return { data }
 }
+
+export async function updatePost(postId: string, formData: FormData) {
+  const supabase = await createClient()
+
+  const title = formData.get("title") as string
+  const content = formData.get("content") as string
+  const due_date = formData.get("due_date") as string
+
+  const { error } = await supabase
+    .from("posts")
+    .update({
+      title,
+      content,
+      due_date: due_date || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", postId)
+
+  if (error) return { error: error.message }
+  revalidatePath("/dashboard")
+}
