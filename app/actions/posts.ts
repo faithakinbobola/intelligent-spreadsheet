@@ -53,42 +53,42 @@ import { revalidatePath } from "next/cache"
 //   return { success: true }
 // }
 
-export async function inviteUser(formData: FormData) {
-  const { profile } = await getUserWithRole()
+// export async function inviteUser(formData: FormData) {
+//   const { profile } = await getUserWithRole()
 
-  if (!profile || profile.role !== "ADMIN") {
-    return { error: "Unauthorized" }
-  }
+//   if (!profile || profile.role !== "ADMIN") {
+//     return { error: "Unauthorized" }
+//   }
 
-  const email = formData.get("email") as string
-  const name = formData.get("name") as string
-  const role = formData.get("role") as "ADMIN" | "ASSOCIATE"
+//   const email = formData.get("email") as string
+//   const name = formData.get("name") as string
+//   const role = formData.get("role") as "ADMIN" | "ASSOCIATE"
 
-  const adminClient = await createClient()
+//   const adminClient = await createClient()
 
-  // 1️⃣ Send Invite
-  const { data, error } = await adminClient.auth.admin.inviteUserByEmail(
-    email,
-    {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/set-password`,
-    }
-  )
+//   // 1️⃣ Send Invite
+//   const { data, error } = await adminClient.auth.admin.inviteUserByEmail(
+//     email,
+//     {
+//       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/set-password`,
+//     }
+//   )
 
-  if (error) return { error: error.message }
+//   if (error) return { error: error.message }
 
-  if (!data.user) {
-    return { error: "User creation failed" }
-  }
+//   if (!data.user) {
+//     return { error: "User creation failed" }
+//   }
 
-  // 2️⃣ Create Profile
-  const { error: profileError } = await adminClient
-    .from("profiles")
-    .insert({ id: data.user.id, name, role })
-  if (profileError) return { error: profileError.message }
+//   // 2️⃣ Create Profile
+//   const { error: profileError } = await adminClient
+//     .from("profiles")
+//     .insert({ id: data.user.id, name, role })
+//   if (profileError) return { error: profileError.message }
 
-  revalidatePath("/dashboard")
-  return { success: true, message: "Invite sent successfully" }
-}
+//   revalidatePath("/dashboard")
+//   return { success: true, message: "Invite sent successfully" }
+// }
 
 export async function getPosts() {
   const supabase = await createClient()
