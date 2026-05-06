@@ -3,8 +3,9 @@
 import { useState } from "react"
 import LikeModal from "./LikeModal"
 import ActivityModal from "./ActivityModal"
-import { deletePost } from "@/app/actions/posts"
+// import { deletePost } from "@/app/actions/posts"
 import CreatePostForm from "./CreatePostForm"
+import  DeletePost  from "./DeletePost"
 
 interface Action {
   id: string
@@ -42,15 +43,16 @@ export default function PostsTable({ posts, role, userId }: Props) {
   const [likeModal, setLikeModal] = useState<Post | null>(null)
   const [activityModal, setActivityModal] = useState<Post | null>(null)
   const [editModal, setEditModal] = useState<Post | null>(null)
+  const [deleteModal, setDeleteModal] = useState<Post | null>(null)
 
   function myAction(post: Post) {
     return post.post_actions.find((a) => a.user_id === userId)
   }
 
-  async function handleDelete(postId: string) {
-    if (!confirm("Delete this post?")) return
-    await deletePost(postId)
-  }
+  // async function handleDelete(postId: string) {
+  //   if (!confirm("Delete this post?")) return
+  //   await deletePost(postId)
+  // }
 
   return (
     <>
@@ -60,7 +62,7 @@ export default function PostsTable({ posts, role, userId }: Props) {
             <tr>
               <th className="px-4 py-3 font-semibold">Title</th>
               <th className="px-4 py-3 font-semibold">Content</th>
-              <th className="px-4 py-3 font-semibold">Due Date</th>
+              {/* <th className="px-4 py-3 font-semibold">Due Date</th> */}
               {/* <th className="px-4 py-3 font-semibold">Scope</th> */}
               <th className="px-4 py-3 font-semibold">👍 Likes</th>
               {role === "ADMIN" && (
@@ -84,11 +86,11 @@ export default function PostsTable({ posts, role, userId }: Props) {
                   <td className="px-4 py-3 text-gray-500 dark:text-white max-w-50 truncate">
                     {post.content}
                   </td>
-                  <td className="px-4 py-3 text-gray-500 dark:text-white whitespace-nowrap">
+                  {/* <td className="px-4 py-3 text-gray-500 dark:text-white whitespace-nowrap">
                     {post.due_date
                       ? new Date(post.due_date).toLocaleDateString()
                       : "—"}
-                  </td>
+                  </td> */}
                   {/* <td className="px-4 py-3">
                     <span
                       className={`text-xs px-2 py-1 rounded-full font-medium ${
@@ -146,7 +148,7 @@ export default function PostsTable({ posts, role, userId }: Props) {
                       )
                     ) : (
                       <button
-                        onClick={() => handleDelete(post.id)}
+                        onClick={() => setDeleteModal(post)}
                         className="text-red-500 text-xs hover:text-red-700"
                       >
                         Delete
@@ -184,6 +186,14 @@ export default function PostsTable({ posts, role, userId }: Props) {
           onClose={() => setEditModal(null)}
         />
       )}
+
+      {deleteModal && (
+        <DeletePost 
+          postId={deleteModal.id}
+          onClose={() => setDeleteModal(null)}
+        />
+      )
+      }
     </>
   )
 }

@@ -125,7 +125,7 @@ export default function CreatePostForm({ editPost, onClose }: Props) {
                 />
               </div>
 
-              <div className="space-y-1">
+              {/* <div className="space-y-1">
                 <label className="text-sm font-medium">Due Date</label>
                 <input
                   name="due_date"
@@ -137,7 +137,7 @@ export default function CreatePostForm({ editPost, onClose }: Props) {
                   }
                   className="border p-2 w-full rounded text-sm"
                 />
-              </div>
+              </div> */}
 
               {/* Scope selector only shown when creating */}
               {!isEditing && (
