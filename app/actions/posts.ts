@@ -3,6 +3,8 @@
 import { createClient } from "@/lib/supabase/server"
 import { getUserWithRole } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
+import { transporter } from "@/lib/mailer"
+import { supabaseAdmin } from "@/lib/supabase/admin"
 // import { createClient } from "@supabase/ssr"
 
 
@@ -181,6 +183,47 @@ export async function createPost(formData: FormData) {
       .insert(assignments)
 
     if (assignError) return { error: assignError.message }
+  }
+
+  // Send email notifications to all associates
+  if (assignment_scope === "ALL") {
+    try {
+      const { data: associates, error: associatesError } = await supabase
+        .from("profiles")
+        .select("id, name")
+        .eq("role", "ASSOCIATE")
+
+      if (associatesError) throw new Error(`Supabase error: ${associatesError.message}`)
+      if (!associates || associates.length === 0) throw new Error("No associates found in DB")
+
+      // Fetch their emails from AuthenticatorAssertionResponse.users using admin client
+      const associateIds = associates.map(a => a.id)
+
+      const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers()
+
+      if (usersError) throw new Error(`Supabase Auth error: ${usersError.message}`)
+      if (!usersData || usersData.length === 0) throw new Error("No users found in Auth")
+
+      const emails = usersData.users.filter((u) => associateIds.includes(u.id)).map(u => u.email).filter(Boolean) as string[]
+
+      if (emails.length === 0) throw new Error("All associate emails were empty/null")
+
+      const info = await transporter.sendMail({
+        from: `"Intelligent Spreadsheet" <${process.env.GMAIL_USER}>`,
+        bcc: emails.join(","),
+        subject: `New Post on ${title}`,
+        html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #111;">New Post for ${title}</h2>
+          <p style="color: #444;">${content}</p>
+          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/dashboard" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #0070f3; color: white; text-decoration: none; border-radius: 5px;">View Task</a>
+        </div>
+      `,
+      })
+
+    } catch (emailError) {
+      return { error: `Email failed: ${(emailError as Error).message}` }
+    }
   }
 
   revalidatePath("/dashboard")

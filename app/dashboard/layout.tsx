@@ -21,9 +21,9 @@ export default async function DashboardLayout({
             <Link href="/dashboard/admin">
               Admin Panel
             </Link>
-            <Link href="/dashboard/admin/create-post">
+            {/* <Link href="/dashboard/admin/create-post">
               Create Post
-            </Link>
+            </Link> */}
           </div>
         )}
       </aside>

@@ -1,7 +1,16 @@
-import CreatePostForm from "@/components/CreatePostForm";
+// import CreatePostForm from "@/components/CreatePostForm";
+"use client";
+import FilterBar from "@/components/FilterBar";
 
 export default function createPost() {
     return (
-        <CreatePostForm />
+        <>
+            {/* <CreatePostForm /> */}
+            <FilterBar
+                onChange={(filters) => {
+                    console.log("Selected filters:", filters);
+                }}
+            />
+        </>
     )
-} 
+}

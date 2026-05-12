@@ -104,13 +104,11 @@ export default function CreatePostForm({ editPost, onClose }: Props) {
             <form className="space-y-4">
               <div className="space-y-1">
                 <label className="text-sm font-medium">Title</label>
-                <input
-                  name="title"
-                  placeholder="Post title"
-                  defaultValue={editPost?.title ?? ""}
-                  required
-                  className="border p-2 w-full rounded text-sm"
-                />
+                <select name="title" id="" required className="border p-2 w-full rounded text-sm">
+                  <option value=""><span className="p-2">Select a title</span></option>
+                  <option value="Instagram"><span>Instagram</span></option>
+                  <option value="Linkedin"><span>Linkedin</span></option>
+                </select>
               </div>
 
               <div className="space-y-1">
