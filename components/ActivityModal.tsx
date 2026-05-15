@@ -21,9 +21,9 @@ export default function ActivityModal({ postTitle, postContent, actions, onClose
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-black dark:border dark:border-white rounded-lg shadow-xl p-6 w-full max-w-lg space-y-4">
         <div className="flex items-start justify-between gap-3">
-          <div className="w-[95%]">
+          <div className="min-w-0 flex-1">
             <h2 className="text-lg font-semibold">{postTitle}</h2>
-            <p className="text-sm text-gray-500 dark:text-white mt-1">{postContent}</p>
+            <p className="text-sm text-gray-500 dark:text-white mt-1 wrap-break-word">{postContent}</p>
           </div>
           <div>
             <button
