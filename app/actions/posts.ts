@@ -92,12 +92,20 @@ import { supabaseAdmin } from "@/lib/supabase/admin"
 //   return { success: true, message: "Invite sent successfully" }
 // }
 
-export async function getPosts() {
+export async function getPosts(role?: string, userId?: string) {
   const supabase = await createClient()
-  const { profile } = await getUserWithRole()
-  if (!profile) return { error: "Unauthorized" }
+  
+  let currentRole = role
+  let currentUserId = userId
 
-  if (profile.role === "ADMIN") {
+  if (!currentRole || !currentUserId) {
+    const { profile } = await getUserWithRole()
+    if (!profile) return { error: "Unauthorized" }
+    currentRole = profile.role
+    currentUserId = profile.id
+  }
+
+  if (currentRole === "ADMIN") {
     const { data, error } = await supabase
       .from("posts")
       .select(`
@@ -139,8 +147,8 @@ export async function getPosts() {
         user_id
       )
     `)
-    .eq("post_actions.user_id", profile.id)
-    .eq("post_assignments.user_id", profile.id)
+    .eq("post_actions.user_id", currentUserId)
+    .eq("post_assignments.user_id", currentUserId)
     .order("created_at", { ascending: false })
 
   if (error) return { error: error.message }
@@ -187,42 +195,65 @@ export async function createPost(formData: FormData) {
     if (assignError) return { error: assignError.message }
   }
 
-  // Send email notifications to all associates
-  if (assignment_scope === "ALL") {
-    supabase
-      .from("profiles")
-      .select("id, name")
-      .eq("role", "ASSOCIATE")
-      .then(({ data: associates, error: associatesError }) => {
-        if (associatesError || !associates || associates.length === 0) return
+  // Handle email notifications
+  try {
+    let targetUserIds: string[] = []
 
-        // Fetch their emails from AuthenticatorAssertionResponse.users using admin client
-        const associateIds = associates.map(a => a.id)
+    if (assignment_scope === "ALL") {
+      const { data: associates } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("role", "ASSOCIATE")
+      
+      if (associates) {
+        targetUserIds = associates.map(a => a.id)
+      }
+    } else if (assignment_scope === "SPECIFIC" && assignedUsers.length > 0) {
+      targetUserIds = assignedUsers
+    }
 
-        supabaseAdmin.auth.admin.listUsers().then(({ data: usersData, error: usersError }) => {
-          if (usersError || !usersData || usersData.users.length === 0) return
+    if (targetUserIds.length > 0) {
+      // Fetch emails from auth using admin client
+      // Note: listUsers is paginated, for large teams we might need to handle pagination
+      const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers()
+      
+      if (!usersError && usersData?.users) {
+        const emails = usersData.users
+          .filter((u) => targetUserIds.includes(u.id))
+          .map(u => u.email)
+          .filter(Boolean) as string[]
 
-          const emails = usersData.users
-            .filter((u) => associateIds.includes(u.id))
-            .map(u => u.email)
-            .filter(Boolean) as string[]
-    
-          if (emails.length === 0) return
-
+        if (emails.length > 0) {
+          // We don't await this to keep the response fast, 
+          // but we use a more robust way to trigger it
           transporter.sendMail({
             from: `"Intelligent Spreadsheet" <${process.env.GMAIL_USER}>`,
             bcc: emails.join(","),
             subject: `New Post on ${title}`,
             html: `
-              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #111;">New Post for ${title}</h2>
-                <p style="color: #444;">${content}</p>
-                <a href="${process.env.NEXT_PUBLIC_SITE_URL}/dashboard" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #0070f3; color: white; text-decoration: none; border-radius: 5px;">View Task</a>
+              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; overflow: hidden;">
+                <div style="background-color: #0070f3; padding: 20px; text-align: center;">
+                  <h1 style="color: white; margin: 0; font-size: 20px;">New Content Published</h1>
+                </div>
+                <div style="padding: 30px; background-color: white;">
+                  <h2 style="color: #111; margin-top: 0;">${title}</h2>
+                  <p style="color: #444; line-height: 1.6; font-size: 15px;">${content}</p>
+                  <div style="margin-top: 30px; text-align: center;">
+                    <a href="${process.env.NEXT_PUBLIC_SITE_URL}/dashboard" style="display: inline-block; padding: 12px 24px; background-color: #0070f3; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">View in Dashboard</a>
+                  </div>
+                </div>
+                <div style="padding: 15px; background-color: #f9f9f9; text-align: center; border-top: 1px solid #eee;">
+                  <p style="color: #888; font-size: 12px; margin: 0;">This is an automated notification from Intelligent Spreadsheet.</p>
+                </div>
               </div>
             `,
-          }).catch(console.error)
-        })
-      })
+          }).catch(err => console.error("Email send failed:", err))
+        }
+      }
+    }
+  } catch (notificationError) {
+    console.error("Notification logic failed:", notificationError)
+    // We don't return error here to ensure the post creation is still considered successful
   }
 
   revalidatePath("/dashboard")

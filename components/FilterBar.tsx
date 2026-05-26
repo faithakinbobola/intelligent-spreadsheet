@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 
 type Platform = "all" | "instagram" | "linkedin";
-type Timeframe = "day" | "week" | "month";
+type Timeframe = "day" | "week" | "month" | "all";
 
 interface FilterState {
   platform: Platform;
@@ -69,31 +69,35 @@ function CalendarPicker({
   const nextMonth = () => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1));
 
   return (
-    <div className="absolute z-50 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl p-4 w-72">
+    <div className="absolute z-50 mt-2 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl shadow-xl p-4 w-72">
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <button onClick={prevMonth} className="p-1 hover:bg-gray-100 rounded-lg text-gray-600">
-          ‹
+      <div className="flex items-center justify-between mb-4 px-1">
+        <button onClick={prevMonth} className="p-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg text-gray-600 dark:text-zinc-400">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
         </button>
-        <span className="font-semibold text-sm text-gray-800">
+        <span className="font-bold text-sm text-gray-800 dark:text-zinc-100">
           {MONTHS[cursor.getMonth()]} {cursor.getFullYear()}
         </span>
-        <button onClick={nextMonth} className="p-1 hover:bg-gray-100 rounded-lg text-gray-600">
-          ›
+        <button onClick={nextMonth} className="p-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg text-gray-600 dark:text-zinc-400">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
         </button>
       </div>
 
       {/* Day labels */}
-      <div className="grid grid-cols-7 mb-1">
+      <div className="grid grid-cols-7 mb-2">
         {DAYS.map((d) => (
-          <div key={d} className="text-center text-xs text-gray-400 font-medium py-1">
+          <div key={d} className="text-center text-[10px] text-gray-400 dark:text-zinc-500 font-bold uppercase tracking-widest">
             {d}
           </div>
         ))}
       </div>
 
       {/* Cells */}
-      <div className="grid grid-cols-7">
+      <div className="grid grid-cols-7 gap-px">
         {cells.map((d, i) =>
           d === null ? (
             <div key={`empty-${i}`} />
@@ -104,10 +108,11 @@ function CalendarPicker({
               onMouseEnter={() => selecting && setHovered(d)}
               onMouseLeave={() => setHovered(null)}
               className={`
-                relative text-xs h-8 w-full flex items-center justify-center transition-colors
-                ${inRange(d) ? "bg-blue-50 text-blue-700" : ""}
-                ${isStart(d) || isEnd(d) ? "bg-blue-600 text-white rounded-full" : "hover:bg-gray-100 rounded-full"}
-                ${d.toDateString() === today.toDateString() && !isStart(d) && !isEnd(d) ? "font-bold text-blue-600" : ""}
+                relative text-xs h-9 w-full flex items-center justify-center transition-all font-semibold
+                ${inRange(d) ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300" : ""}
+                ${isStart(d) || isEnd(d) ? "bg-blue-600 text-white rounded-lg shadow-sm" : "hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg"}
+                ${d.toDateString() === today.toDateString() && !isStart(d) && !isEnd(d) ? "text-blue-600 dark:text-blue-400 underline decoration-2 underline-offset-4" : ""}
+                ${d.getMonth() !== cursor.getMonth() ? "opacity-30" : ""}
               `}
             >
               {d.getDate()}
@@ -117,20 +122,20 @@ function CalendarPicker({
       </div>
 
       {/* Footer */}
-      <div className="flex justify-between mt-3 pt-3 border-t border-gray-100">
+      <div className="flex justify-between mt-4 pt-4 border-t border-gray-100 dark:border-zinc-800">
         <button
           onClick={() => {
             setSelecting(null);
             onChange(new Date(0), new Date(0));
             onClose();
           }}
-          className="text-xs text-gray-500 hover:text-gray-700"
+          className="text-xs font-bold text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 uppercase tracking-tight"
         >
-          Clear
+          Reset
         </button>
         <button
           onClick={onClose}
-          className="text-xs font-medium text-blue-600 hover:text-blue-800"
+          className="text-xs font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 uppercase tracking-tight"
         >
           Done
         </button>
@@ -145,13 +150,12 @@ export default function FilterBar({
   onChange?: (filters: FilterState) => void;
 }) {
   const [platform, setPlatform] = useState<Platform>("all");
-  const [timeframe, setTimeframe] = useState<Timeframe>("week");
+  const [timeframe, setTimeframe] = useState<Timeframe>("all");
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [calOpen, setCalOpen] = useState(false);
   const calRef = useRef<HTMLDivElement>(null);
 
-  // Close calendar on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (calRef.current && !calRef.current.contains(e.target as Node)) {
@@ -162,130 +166,125 @@ export default function FilterBar({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Emit changes
   useEffect(() => {
     onChange?.({ platform, timeframe, startDate, endDate });
   }, [platform, timeframe, startDate, endDate]);
 
   const formatDateRange = () => {
-    if (!startDate || startDate.getTime() === 0) return "Pick date range";
+    if (!startDate || startDate.getTime() === 0) return "Specific Date";
     const fmt = (d: Date) =>
-      d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+      d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
     if (!endDate || endDate.getTime() === 0) return fmt(startDate);
     return `${fmt(startDate)} – ${fmt(endDate)}`;
   };
 
-  const platforms: { value: Platform; label: string; icon: string }[] = [
-    { value: "all", label: "All", icon: "⊞" },
-    {
-      value: "instagram",
-      label: "Instagram",
-      icon: "📸",
-    },
-    {
-      value: "linkedin",
-      label: "LinkedIn",
-      icon: "💼",
-    },
+  const platforms: { value: Platform; label: string }[] = [
+    { value: "all", label: "All", },
+    { value: "instagram", label: "Instagram" },
+    { value: "linkedin", label: "LinkedIn" },
   ];
 
   const timeframes: { value: Timeframe; label: string }[] = [
-    { value: "day", label: "Day" },
+    { value: "day", label: "Today" },
     { value: "week", label: "Week" },
     { value: "month", label: "Month" },
+    { value: "all", label: "All Time" },
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-3 p-4 bg-white border border-gray-200 rounded-2xl shadow-sm">
-      {/* Platform filter */}
-      <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
-        {platforms.map((p) => (
-          <button
-            key={p.value}
-            onClick={() => setPlatform(p.value)}
-            className={`
-              flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all
-              ${platform === p.value
-                ? "bg-white shadow text-gray-900"
-                : "text-gray-500 hover:text-gray-700"}
-            `}
-          >
-            <span>{p.icon}</span>
-            {p.label}
-          </button>
-        ))}
+    <div className="flex flex-wrap items-center gap-4 p-5 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-2xl shadow-sm">
+      {/* Platform toggle */}
+      <div className="flex flex-col gap-1.5">
+        <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest ml-1">Platform</span>
+        <div className="flex items-center gap-1 bg-gray-50 dark:bg-zinc-950 p-1 rounded-xl border border-gray-100 dark:border-zinc-800">
+          {platforms.map((p) => (
+            <button
+              key={p.value}
+              onClick={() => setPlatform(p.value)}
+              className={`
+                px-4 py-1.5 rounded-lg text-xs font-bold transition-all
+                ${platform === p.value
+                  ? "bg-white dark:bg-zinc-800 shadow-sm text-gray-900 dark:text-white"
+                  : "text-gray-500 hover:text-gray-700 dark:text-zinc-500 dark:hover:text-zinc-400"}
+              `}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Divider */}
-      <div className="hidden sm:block w-px h-8 bg-gray-200" />
+      <div className="hidden md:block w-px h-10 bg-gray-100 dark:bg-zinc-800 self-end mb-1" />
 
       {/* Timeframe toggle */}
-      <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
-        {timeframes.map((t) => (
-          <button
-            key={t.value}
-            onClick={() => setTimeframe(t.value)}
-            className={`
-              px-3 py-1.5 rounded-lg text-sm font-medium transition-all
-              ${timeframe === t.value
-                ? "bg-blue-600 text-white shadow"
-                : "text-gray-500 hover:text-gray-700"}
-            `}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="flex flex-col gap-1.5">
+        <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest ml-1">Timeframe</span>
+        <div className="flex items-center gap-1 bg-gray-50 dark:bg-zinc-950 p-1 rounded-xl border border-gray-100 dark:border-zinc-800">
+          {timeframes.map((t) => (
+            <button
+              key={t.value}
+              onClick={() => setTimeframe(t.value)}
+              className={`
+                px-4 py-1.5 rounded-lg text-xs font-bold transition-all
+                ${timeframe === t.value
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-100 dark:shadow-none"
+                  : "text-gray-500 hover:text-gray-700 dark:text-zinc-500 dark:hover:text-zinc-400"}
+              `}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Divider */}
-      <div className="hidden sm:block w-px h-8 bg-gray-200" />
+      <div className="hidden md:block w-px h-10 bg-gray-100 dark:bg-zinc-800 self-end mb-1" />
 
       {/* Calendar date range picker */}
-      <div className="relative" ref={calRef}>
-        <button
-          onClick={() => setCalOpen((v) => !v)}
-          className={`
-            flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium border transition-all
-            ${calOpen || (startDate && startDate.getTime() !== 0)
-              ? "border-blue-500 text-blue-700 bg-blue-50"
-              : "border-gray-200 text-gray-600 bg-white hover:bg-gray-50"}
-          `}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          {formatDateRange()}
-        </button>
+      <div className="flex flex-col gap-1.5">
+        <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest ml-1">Custom Date</span>
+        <div className="relative" ref={calRef}>
+          <button
+            onClick={() => setCalOpen((v) => !v)}
+            className={`
+              flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border transition-all
+              ${calOpen || (startDate && startDate.getTime() !== 0)
+                ? "border-blue-500 text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                : "border-gray-100 dark:border-zinc-800 text-gray-600 dark:text-zinc-400 bg-gray-50 dark:bg-zinc-950 hover:bg-white dark:hover:bg-zinc-800"}
+            `}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            {formatDateRange()}
+          </button>
 
-        {calOpen && (
-          <CalendarPicker
-            value={{ start: startDate, end: endDate }}
-            onChange={(s, e) => {
-              setStartDate(s.getTime() === 0 ? null : s);
-              setEndDate(e.getTime() === 0 ? null : e);
-            }}
-            onClose={() => setCalOpen(false)}
-          />
-        )}
-      </div>
-
-      {/* Active filter badges */}
-      {(platform !== "all" || (startDate && startDate.getTime() !== 0)) && (
-        <div className="flex items-center gap-2 ml-auto">
-          {platform !== "all" && (
-            <span className="flex items-center gap-1 text-xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-1 rounded-full">
-              {platforms.find((p) => p.value === platform)?.icon} {platform}
-              <button onClick={() => setPlatform("all")} className="ml-1 hover:text-blue-900">×</button>
-            </span>
-          )}
-          {startDate && startDate.getTime() !== 0 && (
-            <span className="flex items-center gap-1 text-xs bg-purple-50 text-purple-700 border border-purple-200 px-2 py-1 rounded-full">
-              📅 {formatDateRange()}
-              <button onClick={() => { setStartDate(null); setEndDate(null); }} className="ml-1 hover:text-purple-900">×</button>
-            </span>
+          {calOpen && (
+            <CalendarPicker
+              value={{ start: startDate, end: endDate }}
+              onChange={(s, e) => {
+                setStartDate(s.getTime() === 0 ? null : s);
+                setEndDate(e.getTime() === 0 ? null : e);
+              }}
+              onClose={() => setCalOpen(false)}
+            />
           )}
         </div>
+      </div>
+
+      {/* Reset button */}
+      {(platform !== "all" || timeframe !== "all" || (startDate && startDate.getTime() !== 0)) && (
+        <button 
+          onClick={() => {
+            setPlatform("all");
+            setTimeframe("all");
+            setStartDate(null);
+            setEndDate(null);
+          }}
+          className="ml-auto self-end mb-1 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition-colors"
+        >
+          Clear Filters
+        </button>
       )}
     </div>
   );
