@@ -52,7 +52,7 @@ export default async function AdminPage() {
   }) as User[]
 
   const totalUsers = users?.length ?? 0
-  const activeAssociates = users?.filter(u => u.role === "ASSOCIATE" && u.engagementCount > 0).length ?? 0
+  const activeAssociates = users?.filter(u => u.role === "ASSOCIATE" && (u.engagementCount ?? 0) > 0).length ?? 0
   const totalPosts = posts?.length ?? 0
 
   return (
