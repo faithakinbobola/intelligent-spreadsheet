@@ -29,7 +29,7 @@ export default function UserList({ users }: { users: User[] }) {
             result = result.filter(u => {
                 if (filter === "admin") return u.role === "ADMIN";
                 if (filter === "associate") return u.role === "ASSOCIATE";
-                if (filter === "active_associate") return u.role === "ASSOCIATE" && u.engagementCount > 0;
+                if (filter === "active_associate") return u.role === "ASSOCIATE" && (u.engagementCount ?? 0) > 0;
                 if (filter === "inactive_associate") return u.role === "ASSOCIATE" && u.engagementCount === 0;
                 return true;
             });
@@ -146,10 +146,10 @@ export default function UserList({ users }: { users: User[] }) {
                             >
                                 <div className="flex items-center gap-4">
                                     <div className="relative">
-                                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                                        <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
                                             {u.name.charAt(0).toUpperCase()}
                                         </div>
-                                        {u.role === "ASSOCIATE" && (<div className={`absolute -bottom-1 -right-1 w-4 h-4 border-2 border-white dark:border-zinc-900 rounded-full ${u.engagementCount > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>)}
+                                        {u.role === "ASSOCIATE" && (<div className={`absolute -bottom-1 -right-1 w-4 h-4 border-2 border-white dark:border-zinc-900 rounded-full ${(u.engagementCount ?? 0) > 0 ? 'bg-green-500' : 'bg-gray-300'}`}></div>)}
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-gray-900 dark:text-white leading-tight">{u.name}</h3>
@@ -221,8 +221,8 @@ export default function UserList({ users }: { users: User[] }) {
                                                 <div className="p-6 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-800 flex flex-col items-center justify-center">
                                                     <p className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest mb-2">Status</p>
                                                     <div className="flex items-center gap-2">
-                                                        <div className={`w-2 h-2 rounded-full ${u.engagementCount > 0 ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}></div>
-                                                        <p className="text-xl font-bold text-gray-900 dark:text-white">{u.engagementCount > 0 ? 'Active' : 'Inactive'}</p>
+                                                        <div className={`w-2 h-2 rounded-full ${(u.engagementCount ?? 0) > 0 ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}></div>
+                                                        <p className="text-xl font-bold text-gray-900 dark:text-white">{(u.engagementCount ?? 0) > 0 ? 'Active' : 'Inactive'}</p>
                                                     </div>
                                                     <p className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 mt-1 uppercase tracking-tighter">Syncing Real-time</p>
                                                 </div>
@@ -248,16 +248,16 @@ export default function UserList({ users }: { users: User[] }) {
                                                             <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100">Engagement History</h4>
                                                         </div>
                                                         <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                                                            {u.engagements.length} Items
+                                                            {u.engagements?.length ?? 0} Items
                                                         </span>
                                                     </div>
                                                     <div className="divide-y divide-gray-50 dark:divide-zinc-800 max-h-64 overflow-y-auto custom-scrollbar">
-                                                        {u.engagements.length > 0 ? (
-                                                            u.engagements.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((eng, idx) => (
+                                                        {u.engagements?.length > 0 ? (
+                                                            (u.engagements?.slice().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) ?? []).map((eng, idx) => (
                                                                 <div key={idx} className="px-5 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-zinc-800/30 transition-colors group">
                                                                     <div className="flex items-center gap-4">
                                                                         <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-[10px] font-black text-gray-400 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
-                                                                            {u.engagements.length - idx}
+                                                                            {(u.engagements?.length ?? 0) - idx}
                                                                         </div>
                                                                         <div>
                                                                             <p className="text-sm font-bold text-gray-900 dark:text-white">{eng.post_title}</p>
@@ -296,7 +296,7 @@ export default function UserList({ users }: { users: User[] }) {
                             </svg>
                         </div>
                         <h4 className="text-lg font-bold text-gray-900 dark:text-white">No users found</h4>
-                        <p className="text-sm text-gray-500 dark:text-zinc-500 mt-1 max-w-xs mx-auto">Try adjusting your filters or search query to find the users you're looking for.</p>
+                        <p className="text-sm text-gray-500 dark:text-zinc-500 mt-1 max-w-xs mx-auto">Try adjusting your filters or search query to find the users you&apos;re looking for.</p>
                         <button 
                             onClick={() => { setFilter("all"); setSearchQuery(""); setSortOrder(null); }}
                             className="mt-6 text-xs font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 hover:underline"
