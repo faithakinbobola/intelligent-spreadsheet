@@ -1,19 +1,30 @@
+import UserList from "@/components/UserList"
 import { requireAdmin } from "@/lib/auth"
+import { User } from "@/types"
 // import { createClient } from "@/lib/supabase/server"
 
 export default async function AdminPage() {
   const { supabase, profile } = await requireAdmin()      // check admin
   // const supabase = await createClient()
 
-  const { data: users } = await supabase
-    .from("profiles")
-    .select("id, name, role, created_at")
-    .order("created_at", { ascending: false })
+  const [usersResponse, postsResponse] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, name, role, created_at, engagementCount:post_actions(count)")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("posts")
+      .select("id, title, created_at")
+      .order("created_at", { ascending: false })
+  ])
 
-  const { data: posts } = await supabase
-    .from("posts")
-    .select("id, title, created_at")
-    .order("created_at", { ascending: false })
+  const usersData = usersResponse.data
+  const posts = postsResponse.data
+
+  const users = usersData?.map((u: any) => ({
+    ...u,
+    engagementCount: u.engagementCount?.[0]?.count ?? 0,
+  })) as User[]
 
   return (
     <div className="space-y-8">
@@ -26,11 +37,7 @@ export default async function AdminPage() {
           Users
         </h2>
 
-        {users?.map((u) => (
-          <div key={u.id} className="p-4 border rounded">
-            {u.name} — {u.role}
-          </div>
-        ))}
+        <UserList users={users ?? []} />
       </section>
 
       <section>
@@ -40,7 +47,7 @@ export default async function AdminPage() {
 
         {posts?.map((p) => (
           <div key={p.id} className="p-4 border rounded">
-            {p.title}
+            <button type="button">{p.title}</button>
           </div>
         ))}
       </section>

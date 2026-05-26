@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { getUserWithRole } from "@/lib/auth"
+import { getUserWithRole, requireAdmin } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { transporter } from "@/lib/mailer"
 import { supabaseAdmin } from "@/lib/supabase/admin"
@@ -122,7 +122,7 @@ export async function getPosts() {
     return { data }
   }
 
-  // Associate: RLS handles filtering, but we still join
+  // Associate: RLS handles filtering posts, but we should also filter joins for privacy/speed
   const { data, error } = await supabase
     .from("posts")
     .select(`
@@ -139,6 +139,8 @@ export async function getPosts() {
         user_id
       )
     `)
+    .eq("post_actions.user_id", profile.id)
+    .eq("post_assignments.user_id", profile.id)
     .order("created_at", { ascending: false })
 
   if (error) return { error: error.message }
@@ -257,7 +259,8 @@ export async function getAssociates() {
 }
 
 export async function updatePost(postId: string, formData: FormData) {
-  const supabase = await createClient()
+  const { supabase, profile } = await requireAdmin()
+  if (!profile) return { error: "Unauthorized" }
 
   const title = formData.get("title") as string
   const content = formData.get("content") as string
@@ -266,8 +269,8 @@ export async function updatePost(postId: string, formData: FormData) {
   const { error } = await supabase
     .from("posts")
     .update({
-      title,
-      content,
+      title: title.trim(),
+      content: content.trim(),
       due_date: due_date || null,
       updated_at: new Date().toISOString(),
     })
@@ -275,4 +278,5 @@ export async function updatePost(postId: string, formData: FormData) {
 
   if (error) return { error: error.message }
   revalidatePath("/dashboard")
+  return { success: true }
 }
