@@ -20,7 +20,7 @@ export default async function DashboardLayout({
 
       {/* Main Content */}
       <div className="flex-1 min-w-0 lg:ml-64 flex flex-col pt-14 lg:pt-0">
-        <header className="h-16 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 flex items-center justify-between px-8 sticky top-0 z-10">
+        <header className="h-16 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10">
           <div className="flex items-center gap-2">
             <h1 className="text-sm font-semibold text-gray-500 dark:text-zinc-400">Dashboard</h1>
             <span className="text-gray-300 dark:text-zinc-700">/</span>
@@ -37,7 +37,7 @@ export default async function DashboardLayout({
           </div>
         </header>
 
-        <main className="p-8 max-w-[1600px] mx-auto w-full min-w-0 overflow-x-auto">
+        <main className="p-4 md:p-8 max-w-[1600px] mx-auto w-full min-w-0 overflow-x-auto">
           {children}
         </main>
       </div>

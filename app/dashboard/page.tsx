@@ -15,7 +15,7 @@ export default async function DashboardPage() {
   const postList = (posts as any ?? [])
   const totalPosts = postList.length
   const myEngagements = postList.filter((p: any) => p.post_actions.some((a: any) => a.user_id === profile.id)).length
-  
+
   const linkedinPostsCount = postList.filter((p: any) => p.content.includes("linkedin")).length
   const instagramPostsCount = postList.filter((p: any) => p.content.includes("instagram")).length
 
@@ -150,10 +150,10 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      <PostManager 
-        initialPosts={postList} 
-        role={profile.role as "ADMIN" | "ASSOCIATE"} 
-        userId={profile.id} 
+      <PostManager
+        initialPosts={postList}
+        role={profile.role as "ADMIN" | "ASSOCIATE"}
+        userId={profile.id}
       />
     </div>
   )
