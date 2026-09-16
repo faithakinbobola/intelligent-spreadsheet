@@ -19,8 +19,8 @@ export default function PostsTable({ posts, role, userId }: Props) {
 
   return (
     <>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+      <div className="w-full min-w-0 overflow-x-auto">
+        <table className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="border-b border-gray-100 dark:border-zinc-800">
               <th className="px-6 py-4 font-semibold text-gray-400 dark:text-zinc-500 text-left uppercase tracking-wider text-[10px]">Post Details</th>

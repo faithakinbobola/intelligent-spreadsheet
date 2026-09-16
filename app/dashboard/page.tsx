@@ -141,7 +141,7 @@ export default async function DashboardPage() {
 
 
       {profile.role === "ADMIN" && (
-        <div className="flex items-center justify-between bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm">
+        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm">
           <div>
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">Content Management</h2>
             <p className="text-sm text-gray-500 dark:text-zinc-400">Create and manage posts for your associates.</p>
