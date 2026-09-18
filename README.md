@@ -18,7 +18,8 @@ Admins can view all activity and filter completion data.
 ---
 Admins can:
 - Create tasks
-- Assign to all or specific associates
+- Edit created tasks
+- Assign to all or all associates
 - View completion list per task
 - Filter by user/date/status
 ---
@@ -42,7 +43,7 @@ Associates can:
   /login
   /signup
   /dashboard
-  /admin
+    admin/create-post
   /api
     /auth
       signup/route.ts
@@ -51,12 +52,33 @@ Associates can:
       route.ts
       [id]/route.ts
     /actions
-      route.ts
+      auth.ts
+      postActions.ts
+      posts.ts
+    /callback
+      loading.ts
+      routes.ts
 
+/components
+  ActivityModal.tsx
+  CreatePostForm.tsx
+  CreatePostTable.tsx
+  DeletePost.tsx
+  Filterbar.tsx
+  LikeModal.tsx
+  PostManager.tsx
+  UserList.tsx
 
 /lib
-  supabaseServer.ts
+  /supabase
+    admin.ts
+    client.ts
+    proxy.ts
+    server.ts
+  getSupabaseUser.ts
   auth.ts
+  mailer.ts
+  middleware.ts
   permissions.ts
 
 
